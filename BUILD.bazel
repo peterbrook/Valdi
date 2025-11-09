@@ -1,4 +1,5 @@
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("//bzl/valdi:valdi_exported_library.bzl", "valdi_exported_library")
 
 # tsc demands that these be defined in the root of the workspace
 npm_link_package(
@@ -11,4 +12,32 @@ npm_link_package(
     name = "valdi_core_link",
     src = "@valdi//src/valdi_modules/src/valdi/valdi_core:valdi_core_dts",
     visibility = ["//visibility:public"],
+)
+
+# Valdi Framework - Pre-built library export containing all core modules
+# This is used to generate pre-built frameworks that can be downloaded
+# instead of building from source
+valdi_exported_library(
+    name = "valdi_framework",
+    ios_bundle_id = "com.snap.valdi.framework",
+    ios_bundle_name = "ValdiFramework",
+    web_package_name = "valdi_framework",
+    deps = [
+        "//src/valdi_modules/src/valdi/foundation",
+        "//src/valdi_modules/src/valdi/valdi_core",
+        "//src/valdi_modules/src/valdi/valdi_tsx",
+        "//src/valdi_modules/src/valdi/valdi_http",
+        "//src/valdi_modules/src/valdi/valdi_protobuf",
+        "//src/valdi_modules/src/valdi/valdi_test",
+        "//src/valdi_modules/src/valdi/web_renderer",
+        "//src/valdi_modules/src/valdi/drawing",
+        "//src/valdi_modules/src/valdi/persistence",
+        "//src/valdi_modules/src/valdi/file_system",
+        "//src/valdi_modules/src/valdi/valdi_navigation",
+        "//src/valdi_modules/src/valdi/coreutils",
+        "//src/valdi_modules/src/valdi/jasmine",
+        "//src/valdi_modules/src/valdi/bridge_observables",
+        "//src/valdi_modules/src/valdi/valdi_rxjs",
+        "//src/valdi_modules/src/valdi/types",
+    ],
 )

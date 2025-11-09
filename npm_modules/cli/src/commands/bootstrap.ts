@@ -21,6 +21,7 @@ import {
 import { wrapInColor } from '../utils/logUtils';
 import { toPascalCase } from '../utils/stringUtils';
 import { getAllProjectSyncTargets, runProjectSync } from './projectsync';
+import { PrebuiltLibraryManager } from '../utils/PrebuiltLibrary';
 
 interface CommandParameters {
   confirmBootstrap: boolean;
@@ -29,6 +30,7 @@ interface CommandParameters {
   valdiImport: string;
   skipProjectsync: boolean;
   withCleanup: boolean;
+  usePrebuilt: boolean;
 }
 
 interface ApplicationTemplate {
@@ -226,8 +228,58 @@ async function valdiBootstrap(argv: ArgumentsResolver<CommandParameters>) {
     await runProjectSync(bazel, await getAllProjectSyncTargets(bazel), undefined, true);
   }
 
+  // Download prebuilt libraries if enabled
+  if (argv.getArgument('usePrebuilt')) {
+    console.log(wrapInColor('\nDownloading prebuilt Valdi frameworks...', ANSI_COLORS.BLUE_COLOR));
+    const libraryManager = new PrebuiltLibraryManager();
+    const version = PrebuiltLibraryManager.getCurrentValdiVersion();
+
+    try {
+      // Download iOS debug framework (most commonly used for development)
+      await libraryManager.downloadLibrary({
+        platform: 'ios',
+        buildConfig: 'debug',
+        version,
+      });
+
+      // Download Android debug framework
+      await libraryManager.downloadLibrary({
+        platform: 'android',
+        buildConfig: 'debug',
+        version,
+      });
+
+      console.log(
+        wrapInColor(
+          '\n✓ Prebuilt frameworks downloaded and cached successfully!',
+          ANSI_COLORS.GREEN_COLOR
+        )
+      );
+      console.log(
+        wrapInColor(
+          'These will significantly speed up future builds by avoiding recompilation of the Valdi framework.',
+          ANSI_COLORS.BLUE_COLOR
+        )
+      );
+    } catch (error) {
+      // Don't fail bootstrap if prebuilt download fails
+      console.log(
+        wrapInColor(
+          '\n⚠ Warning: Could not download prebuilt libraries. Builds will compile from source.',
+          ANSI_COLORS.YELLOW_COLOR
+        )
+      );
+      if (error instanceof Error) {
+        console.log(wrapInColor(`  ${error.message}`, ANSI_COLORS.GRAY_COLOR));
+      }
+    }
+  } else {
+    console.log(wrapInColor('\nSkipping prebuilt library download (--no-prebuilt flag set)', ANSI_COLORS.YELLOW_COLOR));
+    console.log(wrapInColor('Builds will compile the Valdi framework from source.', ANSI_COLORS.YELLOW_COLOR));
+  }
+
   // Finalize message
-  console.log(wrapInColor('Bootstrap complete!', ANSI_COLORS.GREEN_COLOR));
+  console.log(wrapInColor('\nBootstrap complete!', ANSI_COLORS.GREEN_COLOR));
 }
 
 export const command = 'bootstrap';
@@ -251,6 +303,11 @@ export const builder = (yargs: Argv<CommandParameters>) => {
       type: 'boolean',
       alias: 'c',
     })
-    .option('projectName', { describe: 'Name of the project', type: 'string', alias: 'n' });
+    .option('projectName', { describe: 'Name of the project', type: 'string', alias: 'n' })
+    .option('usePrebuilt', {
+      describe: 'Download and use prebuilt Valdi framework libraries for faster builds (use --no-prebuilt to disable)',
+      type: 'boolean',
+      default: true,
+    });
 };
 export const handler = makeCommandHandler(valdiBootstrap);

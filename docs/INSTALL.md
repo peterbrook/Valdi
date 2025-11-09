@@ -51,6 +51,15 @@ valdi bootstrap
 
 This will create all necessary files for a new Valdi project in your current directory.
 
+> [!TIP]
+> **Faster Builds with Prebuilt Libraries**: By default, `valdi bootstrap` downloads prebuilt Valdi framework libraries, which significantly reduces build times. The first build typically takes 2-3 minutes instead of 10-15 minutes.
+>
+> To build from source instead (e.g., for custom framework modifications):
+> ```bash
+> valdi bootstrap --no-prebuilt
+> ```
+> See [Prebuilt Libraries Documentation](../docs/prebuilt-libraries.md) for more details.
+
 ### 2. Run Your Project
 
 Choose your target platform and install dependencies:
@@ -64,7 +73,7 @@ valdi install android
 ```
 
 > [!NOTE]
-> The first build may take several minutes as it sets up the development environment.
+> With prebuilt libraries (default), the first build takes 2-3 minutes. Without prebuilt libraries, it may take 10-15 minutes as it compiles the Valdi framework from source.
 
 ### 3. Enable Hot Reloading
 
